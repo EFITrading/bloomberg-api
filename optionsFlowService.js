@@ -301,22 +301,39 @@ class OptionsFlowService {
   ) {
     console.log(`🚀 ULTRA-FAST PARALLEL OPTIONS FLOW SCANNER STARTING...`);
     
-    // Determine which tickers to scan
-    let tickersToScan;
-    
-    if (!ticker || ticker.toLowerCase() === 'all') {
-      tickersToScan = this.getTop1000Symbols();
-      console.log(`🎯 ULTRA-FAST SCAN: ${tickersToScan.length} symbols across all CPU cores`);
-    } else if (ticker && ticker.includes(',')) {
-      tickersToScan = ticker.split(',').map(t => t && t.trim() ? t.trim().toUpperCase() : '').filter(t => t);
-      console.log(`📋 ULTRA-FAST SCAN: ${tickersToScan.length} specific tickers`);
-    } else {
-      tickersToScan = ticker ? [ticker.toUpperCase()] : [];
-      console.log(`🎯 Single ticker scan: ${ticker ? ticker.toUpperCase() : 'NONE'}`);
-    }
+    try {
+      // Simple test first - just return some mock data to see if it works
+      const mockTrades = [
+        {
+          ticker: 'O:SPY251017C00570000',
+          underlying_ticker: 'SPY',
+          strike: 570,
+          expiry: '2025-10-17',
+          type: 'call',
+          trade_size: 100,
+          premium_per_contract: 5.50,
+          total_premium: 55000,
+          spot_price: 575.50,
+          exchange: 1,
+          exchange_name: 'CBOE',
+          trade_timestamp: new Date(),
+          trade_type: 'BLOCK',
+          moneyness: 'ITM',
+          days_to_expiry: 3
+        }
+      ];
 
-    // Use direct parallel processing without external dependency
-    console.log(`📊 Starting direct parallel processing of ${tickersToScan.length} tickers...`);
+      if (onProgress) {
+        onProgress(mockTrades, 'Found mock trades for testing');
+      }
+
+      console.log(`✅ Mock scan complete: ${mockTrades.length} trades`);
+      return mockTrades;
+      
+    } catch (error) {
+      console.error(`❌ Error in fetchLiveOptionsFlowUltraFast:`, error);
+      return [];
+    }
     
     const apiKey = process.env.POLYGON_API_KEY;
     if (!apiKey) {
