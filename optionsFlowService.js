@@ -315,9 +315,8 @@ class OptionsFlowService {
       console.log(`🎯 Single ticker scan: ${ticker ? ticker.toUpperCase() : 'NONE'}`);
     }
 
-    // Use parallel processor to scan all tickers using all CPU cores
-    const { ParallelOptionsFlowProcessor } = require('./ParallelOptionsFlowProcessor.js');
-    const parallelProcessor = new ParallelOptionsFlowProcessor();
+    // Use direct parallel processing without external dependency
+    console.log(`📊 Starting direct parallel processing of ${tickersToScan.length} tickers...`);
     
     const apiKey = process.env.POLYGON_API_KEY;
     if (!apiKey) {
