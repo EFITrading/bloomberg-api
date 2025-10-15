@@ -44,8 +44,22 @@ app.get('/api/stream-options-flow', async (req, res) => {
   setTimeout(() => {
     res.write(`data: ${JSON.stringify({
       type: 'complete',
-      trades: [],
-      summary: { total_trades: 0, message: 'API server ready for parallel processing' }
+            trades: [],
+      summary: { 
+        total_trades: 0, 
+        total_premium: 0,
+        unique_symbols: 0,
+        trade_types: { BLOCK: 0, SWEEP: 0, 'MULTI-LEG': 0, SPLIT: 0 },
+        call_put_ratio: { calls: 0, puts: 0 },
+        processing_time_ms: 0,
+        message: 'API server ready for parallel processing' 
+      },
+      market_info: {
+        status: 'LIVE',
+        is_live: true,
+        data_date: new Date().toISOString().split('T')[0],
+        market_open: true
+      }
     })}\n\n`);
     res.end();
   }, 2000);
@@ -55,4 +69,5 @@ app.listen(port, () => {
   console.log(`🚀 Bloomberg API Server running on port ${port}`);
   console.log(`✅ Parallel processing enabled`);
   console.log(`🔗 CORS enabled for efitrading.com`);
+
 });
