@@ -45,8 +45,8 @@ class ParallelOptionsFlowProcessor {
 
   createWorkerPromise(batch, workerIndex, onProgress) {
     return new Promise((resolve) => {
-      // Use the separate worker file with more reliable path resolution for Next.js
-      const workerPath = path.resolve(process.cwd(), 'src/lib/optionsFlowWorker.js');
+      // Use the worker file in the same directory for Render
+      const workerPath = path.resolve(__dirname, 'optionsFlowWorker.js');
       
       const worker = new Worker(workerPath, {
         workerData: {
