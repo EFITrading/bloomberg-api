@@ -318,8 +318,54 @@ class OptionsFlowService {
           
           console.log(`🔍 Scanning ${tickerSymbol}...`);
           
-          // Use the working snapshot method
-          const tickerTrades = await this.fetchOptionsSnapshotRobust(tickerSymbol);
+          // Get API key from environment
+          const apiKey = process.env.POLYGON_API_KEY;
+          if (!apiKey) {
+            console.error(`❌ POLYGON_API_KEY not found in environment`);
+            continue;
+          }
+          
+          // Direct API call
+          const url = `https://api.polygon.io/v3/snapshot/options/${tickerSymbol}?apikey=${apiKey}`;
+          console.log(`📡 Making API call for ${tickerSymbol}`);
+          
+          const response = await fetch(url);
+          const data = await response.json();
+          
+          console.log(`📊 ${tickerSymbol}: Status=${data.status}, Results=${data.results?.length || 0}`);
+          
+          const tickerTrades = [];
+          if (data.status === 'OK' && data.results && data.results.length > 0) {
+            // Process ALL results that have trades
+            for (const contract of data.results) {
+              if (contract.last_trade && contract.last_trade.price && contract.last_trade.size > 0) {
+                const totalPremium = contract.last_trade.price * contract.last_trade.size * 100;
+                
+                // Only include trades with decent premium
+                if (totalPremium >= 1000) {
+                  tickerTrades.push({
+                    ticker: contract.details.ticker,
+                    underlying_ticker: tickerSymbol,
+                    strike: contract.details.strike_price,
+                    expiry: contract.details.expiration_date,
+                    type: contract.details.contract_type.toLowerCase(),
+                    trade_size: contract.last_trade.size,
+                    premium_per_contract: contract.last_trade.price,
+                    total_premium: totalPremium,
+                    spot_price: 100,
+                    exchange: contract.last_trade.exchange || 1,
+                    exchange_name: 'CBOE',
+                    trade_timestamp: new Date(contract.last_trade.sip_timestamp / 1000000),
+                    trade_type: 'BLOCK',
+                    moneyness: 'OTM',
+                    days_to_expiry: 7
+                  });
+                }
+              }
+            }
+          } else {
+            console.log(`❌ ${tickerSymbol}: API error - ${data.status || 'Unknown error'}`);
+          }
           
           if (tickerTrades && tickerTrades.length > 0) {
             allTrades.push(...tickerTrades);
