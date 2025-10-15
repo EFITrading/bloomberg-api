@@ -302,33 +302,44 @@ class OptionsFlowService {
     console.log(`🚀 ULTRA-FAST PARALLEL OPTIONS FLOW SCANNER STARTING...`);
     
     try {
-      // Simple test first - just return some mock data to see if it works
-      const mockTrades = [
-        {
-          ticker: 'O:SPY251017C00570000',
-          underlying_ticker: 'SPY',
-          strike: 570,
-          expiry: '2025-10-17',
-          type: 'call',
-          trade_size: 100,
-          premium_per_contract: 5.50,
-          total_premium: 55000,
-          spot_price: 575.50,
-          exchange: 1,
-          exchange_name: 'CBOE',
-          trade_timestamp: new Date(),
-          trade_type: 'BLOCK',
-          moneyness: 'ITM',
-          days_to_expiry: 3
+      // Scan priority tickers first
+      const priorityTickers = ['SPY', 'QQQ', 'TSLA', 'AAPL', 'NVDA'];
+      const allTrades = [];
+      
+      console.log(`📊 Scanning ${priorityTickers.length} priority tickers...`);
+      
+      for (let i = 0; i < priorityTickers.length; i++) {
+        const tickerSymbol = priorityTickers[i];
+        
+        try {
+          if (onProgress) {
+            onProgress([], `Scanning ${tickerSymbol} (${i + 1}/${priorityTickers.length})...`);
+          }
+          
+          console.log(`🔍 Scanning ${tickerSymbol}...`);
+          
+          // Use the working snapshot method
+          const tickerTrades = await this.fetchOptionsSnapshotRobust(tickerSymbol);
+          
+          if (tickerTrades && tickerTrades.length > 0) {
+            allTrades.push(...tickerTrades);
+            console.log(`✅ Found ${tickerTrades.length} trades for ${tickerSymbol}`);
+            
+            // Stream trades immediately
+            if (onProgress) {
+              onProgress(tickerTrades, `Found ${tickerTrades.length} trades for ${tickerSymbol}`);
+            }
+          } else {
+            console.log(`📭 No trades found for ${tickerSymbol}`);
+          }
+          
+        } catch (tickerError) {
+          console.error(`❌ Error scanning ${tickerSymbol}:`, tickerError.message);
         }
-      ];
-
-      if (onProgress) {
-        onProgress(mockTrades, 'Found mock trades for testing');
       }
-
-      console.log(`✅ Mock scan complete: ${mockTrades.length} trades`);
-      return mockTrades;
+      
+      console.log(`✅ Priority scan complete: ${allTrades.length} total trades`);
+      return allTrades;
       
     } catch (error) {
       console.error(`❌ Error in fetchLiveOptionsFlowUltraFast:`, error);
